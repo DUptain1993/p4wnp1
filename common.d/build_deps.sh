@@ -142,6 +142,11 @@ if [ -z "${DEB_VERSION}" ]; then
     exit 1
 elif [ "${DEB_VERSION}" -le 12 ]; then
     echo "[i] Debian ${DEB_VERSION} detected"
+fi
+
+# Ensure qemu-arm-static is available on all supported Debian-based hosts.
+if ! command -v qemu-arm-static >/dev/null 2>&1; then
+    echo "[i] Installing qemu-user-static for qemu-arm-static"
     deps="qemu-user-static"
     apt-wait install_deps
 fi
