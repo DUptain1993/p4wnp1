@@ -118,4 +118,12 @@ status_t=$(($(grep '.*status ' $0 common.d/*.sh | wc -l) -1))
 
 ## Enable colour (--no-colour)
 colour_output="${colour_output:-yes}"
-colour_reset=${colour_reset:-$( tput sgr0 )}
+colour_reset="${colour_reset:-}"
+if [[ "${colour_output}" != "no" ]]; then
+    if tput sgr0 >/dev/null 2>&1; then
+        colour_reset="${colour_reset:-$(tput sgr0)}"
+    else
+        colour_output="no"
+        colour_reset=""
+    fi
+fi

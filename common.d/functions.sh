@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2154
 
-# fallback TERM if not set or set to something too basic
-if [[ -z "$TERM" || "$TERM" == "dumb" || "$TERM" == "vt220" ]]; then
+# GitHub Actions and other CI often set TERM=unknown; tput then exits 3 under set -e.
+if [[ -z "$TERM" || "$TERM" == "dumb" || "$TERM" == "vt220" || "$TERM" == "unknown" ]]; then
     export TERM="xterm-256color"
 fi
+
+# Safe tput wrapper for scripts using set -e
+tput_safe() {
+    tput "$@" 2>/dev/null || true
+}
 
 # Print color echo
 function log() {
@@ -13,25 +18,25 @@ function log() {
 
     case $set_color in
         bold)
-            color=$(tput bold) ;;
+            color=$(tput_safe bold) ;;
 
         red)
-            color=$(tput setaf 1) ;;
+            color=$(tput_safe setaf 1) ;;
 
         green)
-            color=$(tput setaf 2) ;;
+            color=$(tput_safe setaf 2) ;;
 
         yellow)
-            color=$(tput setaf 3) ;;
+            color=$(tput_safe setaf 3) ;;
 
         cyan)
-            color=$(tput setaf 6) ;;
+            color=$(tput_safe setaf 6) ;;
 
         gray)
-            color=$(tput setaf 8) ;;
+            color=$(tput_safe setaf 8) ;;
 
         white)
-            color=$(tput setaf 15) ;;
+            color=$(tput_safe setaf 15) ;;
 
     esac
 

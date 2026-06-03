@@ -62,8 +62,8 @@ status_stage3() {
   colour1=""
   colour2=""
   if [ -n "${colour_reset}" ]; then
-    colour1="$(tput setaf 15)"
-    colour2="$(tput setaf 2)"
+    colour1="$(tput setaf 15 2>/dev/null || true)"
+    colour2="$(tput setaf 2 2>/dev/null || true)"
   fi
   echo  "  ${colour1}✅ Stage 3 (\${status_3i}/\${status_3t}):${colour2} \$1${colour_reset}"
 }
