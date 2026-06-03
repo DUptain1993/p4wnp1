@@ -126,7 +126,7 @@ compilers="crossbuild-essential-arm64 crossbuild-essential-armhf crossbuild-esse
 dependencies="arch-test autoconf automake bc bison build-essential cgpt cgroup-tools cmake curl dbus \
 debootstrap device-tree-compiler dosfstools e2fsprogs eatmydata flex gawk git gnupg kpartx           \
 libncurses-dev lsb-release libssl-dev lsof lzma lzop m4 make mmdebstrap parted pixz pkg-config       \
-python3-dev qemu-user qemu-user-binfmt rsync swig systemd-container u-boot-tools vboot-kernel-utils vboot-utils \
+python3-dev qemu-user-static binfmt-support rsync swig systemd-container u-boot-tools vboot-kernel-utils vboot-utils \
 libgnutls28-dev uuid-dev"
 deps="${dependencies} ${compilers}"
 
@@ -136,14 +136,12 @@ apt-wait update
 # Install dependencies
 apt-wait install_deps
 
-DEB_VERSION=$(grep -oP 'VERSION_ID="\K[0-9]+' /etc/os-release 2>/dev/null)
-if [ -z "${DEB_VERSION}" ]; then
-    echo "[-] Unable to detect Debian version"
+# qemu-user-binfmt conflicts with qemu-user-static on Ubuntu; mmdebstrap needs the static binary.
+update-binfmts --enable 2>/dev/null || true
+if [ ! -x /usr/bin/qemu-arm-static ]; then
+    echo "[-] /usr/bin/qemu-arm-static missing after dependency install" >&2
+    echo "[-] Ensure qemu-user-static is installed (not qemu-user-binfmt alone)" >&2
     exit 1
-elif [ "${DEB_VERSION}" -le 12 ]; then
-    echo "[i] Debian ${DEB_VERSION} detected"
-    deps="qemu-user-static"
-    apt-wait install_deps
 fi
 
 # Check minimum version debootstrap

@@ -18,14 +18,24 @@ if [ ! -e /usr/bin/systemd-nspawn ]; then
 
 fi
 
-# Check for qemu-user
-if [ ! -e /usr/bin/qemu-aarch64 ]; then
+# Check for qemu-user (static binaries satisfy mmdebstrap and chroot on Ubuntu hosts)
+if [ ! -e /usr/bin/qemu-aarch64 ] && [ ! -e /usr/bin/qemu-aarch64-static ]; then
     log "Error: missing QEMU" red
-    log "Please run ./commond.d/build_deps.sh" red
+    log "Please run ./common.d/build_deps.sh" red
 
     exit 1
 
 fi
+
+case ${architecture} in
+    armhf | armel)
+        if [ ! -x /usr/bin/qemu-arm-static ]; then
+            log "Error: missing /usr/bin/qemu-arm-static (required for ${architecture} builds)" red
+            log "Please run ./common.d/build_deps.sh" red
+            exit 1
+        fi
+        ;;
+esac
 
 # Check for the kali archive keyring
 if [ ! -e /usr/share/keyrings/kali-archive-keyring.gpg ]; then

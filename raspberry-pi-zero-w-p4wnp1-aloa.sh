@@ -19,9 +19,6 @@ architecture=${architecture:-"armhf"}
 # Desktop manager (xfce, gnome, i3, kde, lxde, mate, e17 or none)
 desktop=${desktop:-"none"}
 
-# Load default base_image configs
-source ./common.d/base_image.sh
-
 host_arch="$(uname -m)"
 if [[ "${host_arch}" == "aarch64" || "${host_arch}" == "arm64" ]]; then
     echo "Error: ${hw_model} build is not supported on arm64 hosts (${host_arch}). Use an x86_64 host." >&2
@@ -33,10 +30,13 @@ if ! command -v arm-linux-gnueabihf-gcc >/dev/null 2>&1; then
     exit 1
 fi
 
-if ! command -v qemu-arm-static >/dev/null 2>&1; then
-    echo "Error: missing qemu-arm-static. Run ./common.d/build_deps.sh first." >&2
+if [ ! -x /usr/bin/qemu-arm-static ]; then
+    echo "Error: missing /usr/bin/qemu-arm-static. Run ./common.d/build_deps.sh first." >&2
     exit 1
 fi
+
+# Load default base_image configs
+source ./common.d/base_image.sh
 
 host_mem_kib="$(awk '/MemTotal:/ {print $2}' /proc/meminfo)"
 host_swap_kib="$(awk '/SwapTotal:/ {print $2}' /proc/meminfo)"

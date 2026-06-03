@@ -31,17 +31,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Configure QEMU user emulation
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y qemu-user-static binfmt-support
-          sudo update-binfmts --enable
-
-      - name: Reset QEMU binfmt handlers
-        continue-on-error: true
-        run: |
-          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-
       - name: Prepare swap for kernel build stability
         run: |
           sudo swapoff -a || true
@@ -53,6 +42,18 @@ jobs:
 
       - name: Install host build dependencies
         run: sudo ./common.d/build_deps.sh
+
+      - name: Verify QEMU armhf emulation
+        run: |
+          test -x /usr/bin/qemu-arm-static
+          sudo update-binfmts --enable
+          ls -l /usr/bin/qemu-arm-static /usr/bin/qemu-armhf-static
+
+      - name: Reset QEMU binfmt handlers
+        continue-on-error: true
+        run: |
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          test -x /usr/bin/qemu-arm-static
 
       - name: Build Raspberry Pi Zero W P4wnP1 A.L.O.A image
         run: |
