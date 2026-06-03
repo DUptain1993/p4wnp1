@@ -205,6 +205,17 @@ cd "${work_dir}"/usr/src/kernel
 # Remove redundant yyloc global declaration
 patch -p1 --no-backup-if-mismatch <"${repo_dir}"/patches/11647f99b4de6bc460e106e876f72fc7af3e54a6.patch
 
+# Fix ARMv6 architecture selection for modern (gcc-11+) cross toolchains.
+# The kernel's arch/arm/Makefile probes "-march=armv6" with $(cc-option) BEFORE
+# -msoft-float is applied. gcc-11+ then errors with "selected architecture lacks
+# an FPU" for the hard-float toolchain, so the probe silently falls back to
+# -march=armv5t and the assembler rejects ARMv6 instructions (cpsid/ldrex/strex).
+# Hardcoding -march=armv6/armv6k removes the broken probe; the real compile still
+# appends -msoft-float, so the FPU objection no longer applies. See Debian #996419.
+sed -i -E 's#^arch-\$\(CONFIG_CPU_32v6\)[[:space:]].*#arch-$(CONFIG_CPU_32v6) =-D__LINUX_ARM_ARCH__=6 -march=armv6#' arch/arm/Makefile
+sed -i -E 's#^arch-\$\(CONFIG_CPU_32v6K\)[[:space:]].*#arch-$(CONFIG_CPU_32v6K) =-D__LINUX_ARM_ARCH__=6 -march=armv6k#' arch/arm/Makefile
+grep -nE '^arch-\$\(CONFIG_CPU_32v6K?\)' arch/arm/Makefile || true
+
 # Note: Compiling the kernel in /usr/src/kernel of the target file system is problematic, as the binaries of the compiling host architecture
 # get deployed to the /usr/src/kernel/scripts subfolder (in this case linux-x64 binaries), which is symlinked to /usr/src/build later on
 # This would f.e. hinder rebuilding single modules, like nexmon's brcmfmac driver, on the Pi itself (online compilation)
@@ -239,10 +250,6 @@ scripts/config --module CONFIG_MAC80211
 scripts/config --module CONFIG_CFG80211
 scripts/config --module CONFIG_RFKILL
 
-# Fix ARMv6 compatibility by disabling SMP and high-level locking primitives
-# that trigger ARMv7-only atomic instructions (cpsid/cpsie, ldrex/strex)
-scripts/config --disable CONFIG_SMP
-scripts/config --disable CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- olddefconfig
 
 # Build kernel
