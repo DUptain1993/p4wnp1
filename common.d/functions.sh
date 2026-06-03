@@ -215,6 +215,31 @@ function systemd-nspawn_exec() {
     fi
 }
 
+# Mount the kernel virtual filesystems required by maintainer scripts inside the
+# chroot. Without /dev/pts and /run, postinst scripts such as hostapd-wpe (openssl
+# certificate generation needs a console) and dbus-based ones fail under qemu-user.
+function mount_chroot_fs() {
+    local m
+    for m in proc sys dev dev/pts run; do
+        mkdir -p "${work_dir}/${m}"
+    done
+
+    mountpoint -q "${work_dir}/proc"    || mount --types proc proc "${work_dir}/proc"
+    mountpoint -q "${work_dir}/sys"     || mount --types sysfs sys "${work_dir}/sys"
+    mountpoint -q "${work_dir}/dev"     || mount --bind /dev "${work_dir}/dev"
+    mountpoint -q "${work_dir}/dev/pts" || mount --types devpts devpts "${work_dir}/dev/pts"
+    mountpoint -q "${work_dir}/run"     || mount --types tmpfs tmpfs "${work_dir}/run"
+}
+
+function umount_chroot_fs() {
+    local m
+    for m in run dev/pts dev sys proc; do
+        if mountpoint -q "${work_dir}/${m}"; then
+            umount -lf "${work_dir}/${m}" 2>/dev/null || true
+        fi
+    done
+}
+
 # chroot environment
 function chroot_exec() {
     log "chroot $*" gray
@@ -223,8 +248,8 @@ function chroot_exec() {
     ENV_VARS="RUNLEVEL=1 LANG=C DEBIAN_FRONTEND=noninteractive DEBCONF_NOWARNINGS=yes"
     [ "${architecture}" == "arm64" ] && ENV_VARS="$ENV_VARS QEMU_CPU=cortex-a72"
 
-    # Ensure /proc is mounted inside chroot
-    mount --types proc /proc "${work_dir}/proc"
+    # Ensure kernel virtual filesystems are mounted inside chroot
+    mount_chroot_fs
 
     # Determine whether to use QEMU (only if we're cross-emulating ARM64)
     if [ "$(arch)" != "aarch64" ] && [ "${architecture}" == "arm64" ]; then
@@ -240,8 +265,8 @@ function chroot_exec() {
     # Run chroot, using QEMU only if needed
     chroot "${work_dir}" /bin/bash -c "exec env $ENV_VARS ${*:-/bin/bash}" < /dev/stdin
 
-    # Cleanup: Unmount /proc
-    umount -lf "${work_dir}/proc"
+    # Cleanup: unmount virtual filesystems
+    umount_chroot_fs
 }
 
 # Create the rootfs - not much to modify here, except maybe throw in some more packages if you want.
@@ -706,13 +731,15 @@ function umount_partitions() {
     sync
     # Define possible mounted points
     # This function is called both if success and failed
-    # If we fail early in the process, then work_dir may still have proc mounted
-    possible_mounts=("${base_dir}/root/boot" "${base_dir}/root/boot/firmware" "${base_dir}/root/proc" "${work_dir}/proc")
+    # If we fail early in the process, then work_dir may still have virtual fs mounted
+    # Order matters: unmount deepest mounts (e.g. dev/pts before dev) first.
+    possible_mounts=("${base_dir}/root/boot/firmware" "${base_dir}/root/boot" "${base_dir}/root/proc" \
+        "${work_dir}/run" "${work_dir}/dev/pts" "${work_dir}/dev" "${work_dir}/sys" "${work_dir}/proc")
 
     # Unmount boot partitions if they exist
     for mount in "${possible_mounts[@]}"; do
         if mountpoint -q "$mount"; then
-            umount -q "$mount"
+            umount -lf "$mount" 2>/dev/null || umount -q "$mount" || true
         fi
     done
 

@@ -1,0 +1,19 @@
+﻿2026-06-03T21:38:45.7346331Z ##[group]Run sudo swapoff -a || true
+2026-06-03T21:38:45.7347777Z [36;1msudo swapoff -a || true[0m
+2026-06-03T21:38:45.7349044Z [36;1msudo fallocate -l 8G /swapfile[0m
+2026-06-03T21:38:45.7350344Z [36;1msudo chmod 600 /swapfile[0m
+2026-06-03T21:38:45.7351556Z [36;1msudo mkswap /swapfile[0m
+2026-06-03T21:38:45.7352744Z [36;1msudo swapon /swapfile[0m
+2026-06-03T21:38:45.7354139Z [36;1mfree -h[0m
+2026-06-03T21:38:45.7454254Z shell: /usr/bin/bash -e {0}
+2026-06-03T21:38:45.7455681Z env:
+2026-06-03T21:38:45.7456604Z   DEBIAN_FRONTEND: noninteractive
+2026-06-03T21:38:45.7457799Z   TERM: xterm-256color
+2026-06-03T21:38:45.7458882Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+2026-06-03T21:38:45.7460137Z ##[endgroup]
+2026-06-03T21:38:45.7886950Z mkswap: /swapfile: warning: wiping old swap signature.
+2026-06-03T21:38:45.7899893Z Setting up swapspace version 1, size = 8 GiB (8589930496 bytes)
+2026-06-03T21:38:45.7901953Z no label, UUID=d12328a5-304c-4193-9eb2-3a0ddc792a41
+2026-06-03T21:38:45.7982419Z                total        used        free      shared  buff/cache   available
+2026-06-03T21:38:45.7985640Z Mem:            15Gi       606Mi        13Gi        42Mi       1.6Gi        14Gi
+2026-06-03T21:38:45.7987174Z Swap:          8.0Gi          0B       8.0Gi

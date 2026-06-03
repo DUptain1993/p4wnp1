@@ -1,0 +1,31 @@
+﻿2026-06-03T21:38:43.6896316Z Current runner version: '2.334.0'
+2026-06-03T21:38:43.6920062Z ##[group]Runner Image Provisioner
+2026-06-03T21:38:43.6920892Z Hosted Compute Agent
+2026-06-03T21:38:43.6921486Z Version: 20260520.533
+2026-06-03T21:38:43.6922072Z Commit: 189110e25284a9812c124fd27b339e2fb4f2f9db
+2026-06-03T21:38:43.6922726Z Build Date: 2026-05-20T17:44:04Z
+2026-06-03T21:38:43.6923392Z Worker ID: {f52b52f5-366b-418e-90ae-ba2f2402c81f}
+2026-06-03T21:38:43.6924039Z Azure Region: centralus
+2026-06-03T21:38:43.6924624Z ##[endgroup]
+2026-06-03T21:38:43.6926157Z ##[group]Operating System
+2026-06-03T21:38:43.6926749Z Ubuntu
+2026-06-03T21:38:43.6927268Z 22.04.5
+2026-06-03T21:38:43.6927742Z LTS
+2026-06-03T21:38:43.6928211Z ##[endgroup]
+2026-06-03T21:38:43.6928743Z ##[group]Runner Image
+2026-06-03T21:38:43.6929287Z Image: ubuntu-22.04
+2026-06-03T21:38:43.6929824Z Version: 20260525.156.1
+2026-06-03T21:38:43.6930782Z Included Software: https://github.com/actions/runner-images/blob/ubuntu22/20260525.156/images/ubuntu/Ubuntu2204-Readme.md
+2026-06-03T21:38:43.6932689Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu22%2F20260525.156
+2026-06-03T21:38:43.6933578Z ##[endgroup]
+2026-06-03T21:38:43.6934575Z ##[group]GITHUB_TOKEN Permissions
+2026-06-03T21:38:43.6936756Z Contents: read
+2026-06-03T21:38:43.6937341Z Metadata: read
+2026-06-03T21:38:43.6937850Z ##[endgroup]
+2026-06-03T21:38:43.6940171Z Secret source: Actions
+2026-06-03T21:38:43.6940937Z Prepare workflow directory
+2026-06-03T21:38:43.7315312Z Prepare all required actions
+2026-06-03T21:38:43.7352260Z Getting action download info
+2026-06-03T21:38:44.1979616Z Download action repository 'actions/checkout@v5' (SHA:93cb6efe18208431cddfb8368fd83d5badbf9bfd)
+2026-06-03T21:38:44.3468489Z Download action repository 'actions/upload-artifact@v5' (SHA:330a01c490aca151604b8cf639adc76d48f6c5d4)
+2026-06-03T21:38:44.5701341Z Complete job name: build
