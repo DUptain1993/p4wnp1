@@ -143,6 +143,10 @@ if [ ! -x /usr/bin/qemu-arm-static ]; then
     echo "[-] Ensure qemu-user-static is installed (not qemu-user-binfmt alone)" >&2
     exit 1
 fi
+# Ubuntu 22.04 may omit qemu-armhf-static; mmdebstrap accepts qemu-arm-static for armhf.
+if [ ! -e /usr/bin/qemu-armhf-static ] && [ -x /usr/bin/qemu-arm-static ]; then
+    ln -sf qemu-arm-static /usr/bin/qemu-armhf-static
+fi
 
 # Check minimum version debootstrap
 debootstrap_ver=$(debootstrap --version | grep -o '[0-9.]\+' | head -1)

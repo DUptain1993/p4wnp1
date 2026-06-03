@@ -47,6 +47,10 @@ jobs:
         run: |
           test -x /usr/bin/qemu-arm-static
           sudo update-binfmts --enable
+          # Jammy qemu-user-static ships qemu-arm-static; mmdebstrap uses that for armhf.
+          if [ ! -e /usr/bin/qemu-armhf-static ]; then
+            sudo ln -sf qemu-arm-static /usr/bin/qemu-armhf-static
+          fi
           ls -l /usr/bin/qemu-arm-static /usr/bin/qemu-armhf-static
 
       - name: Reset QEMU binfmt handlers
