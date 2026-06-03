@@ -1,0 +1,64 @@
+name: Build Raspberry Pi Zero W P4wnP1 A.L.O.A
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "raspberry-pi-zero-w-p4wnp1-aloa.sh"
+      - "common.d/**"
+      - "bsp/**"
+      - "patches/**"
+      - "devices.yml"
+      - ".github/workflows/build-rpi-zero-w-p4wnp1-aloa.yml"
+
+concurrency:
+  group: build-rpi-zero-w-p4wnp1-aloa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      contents: read
+
+    env:
+      DEBIAN_FRONTEND: noninteractive
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare swap for kernel build stability
+        run: |
+          sudo swapoff -a || true
+          sudo fallocate -l 8G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -h
+
+      - name: Install host build dependencies
+        run: sudo ./common.d/build_deps.sh
+
+      - name: Build Raspberry Pi Zero W P4wnP1 A.L.O.A image
+        run: sudo ./raspberry-pi-zero-w-p4wnp1-aloa.sh
+
+      - name: Fix artifact ownership
+        if: always()
+        run: sudo chown -R "$USER:$USER" images logs || true
+
+      - name: Upload generated image artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: raspberry-pi-zero-w-p4wnp1-aloa-image
+          path: |
+            images/*
+            logs/*.log
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Tear down swap
+        if: always()
+        run: sudo swapoff /swapfile || true
