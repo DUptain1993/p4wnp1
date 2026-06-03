@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 360
     permissions:
       contents: read
@@ -30,6 +30,17 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+
+      - name: Configure QEMU user emulation
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static binfmt-support
+          sudo update-binfmts --enable
+
+      - name: Reset QEMU binfmt handlers
+        continue-on-error: true
+        run: |
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 
       - name: Prepare swap for kernel build stability
         run: |
@@ -44,7 +55,22 @@ jobs:
         run: sudo ./common.d/build_deps.sh
 
       - name: Build Raspberry Pi Zero W P4wnP1 A.L.O.A image
-        run: sudo ./raspberry-pi-zero-w-p4wnp1-aloa.sh
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            echo "Build attempt ${attempt}/3"
+            if sudo ./raspberry-pi-zero-w-p4wnp1-aloa.sh; then
+              echo "Build succeeded on attempt ${attempt}"
+              exit 0
+            fi
+            if [ "${attempt}" -eq 3 ]; then
+              echo "Build failed after 3 attempts"
+              exit 1
+            fi
+            echo "Build failed; cleaning partial output and retrying in 30s..."
+            sudo rm -rf base/raspberry-pi-zero-w-p4wnp1-aloa-* images/*.img images/*.img.* || true
+            sleep 30
+          done
 
       - name: Fix artifact ownership
         if: always()

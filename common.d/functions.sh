@@ -249,11 +249,28 @@ function debootstrap_exec() {
     status "debootstrap ${suite} $*"
 
     if [ "$(lsb_release -sc)" == "bullseye" ]; then
-    eatmydata debootstrap --merged-usr --keyring=/usr/share/keyrings/kali-archive-keyring.gpg --components="${components}" \
-        --include="${debootstrap_base}" --arch "${architecture}" "${suite}" "${work_dir}" "$@"
+        eatmydata debootstrap --merged-usr --keyring=/usr/share/keyrings/kali-archive-keyring.gpg --components="${components}" \
+            --include="${debootstrap_base}" --arch "${architecture}" "${suite}" "${work_dir}" "$@"
     else
-    eatmydata mmdebstrap --keyring=/usr/share/keyrings/kali-archive-keyring.gpg --components="${components}" \
-        --include="${debootstrap_base}" --arch "${architecture}" "${suite}" "${work_dir}" "$@"
+        local -a mmdebstrap_args=(
+            --keyring=/usr/share/keyrings/kali-archive-keyring.gpg
+            --components="${components}"
+            --include="${debootstrap_base}"
+            --arch "${architecture}"
+            --variant=minbase
+            --skip=cleanup/apt
+        )
+        local mode
+        for mode in unshare root; do
+            status "mmdebstrap ${suite} (mode=${mode}) $*"
+            rm -rf "${work_dir}"
+            if eatmydata mmdebstrap "${mmdebstrap_args[@]}" --mode="${mode}" "${suite}" "${work_dir}" "$@"; then
+                return 0
+            fi
+            log "mmdebstrap --mode=${mode} failed; trying next mode" yellow
+        done
+        log "mmdebstrap failed with all isolation modes" red
+        return 1
     fi
 }
 
