@@ -252,12 +252,13 @@ function debootstrap_exec() {
         eatmydata debootstrap --merged-usr --keyring=/usr/share/keyrings/kali-archive-keyring.gpg --components="${components}" \
             --include="${debootstrap_base}" --arch "${architecture}" "${suite}" "${work_dir}" "$@"
     else
+        # Use mmdebstrap's default "debootstrap" variant to match the original
+        # package set (minbase strips dirs like /etc/modprobe.d that later steps need).
         local -a mmdebstrap_args=(
             --keyring=/usr/share/keyrings/kali-archive-keyring.gpg
             --components="${components}"
             --include="${debootstrap_base}"
             --arch "${architecture}"
-            --variant=minbase
             --skip=cleanup/apt
         )
         local mode
@@ -430,6 +431,7 @@ function set_hostname() {
 # Add network interface
 function add_interface() {
     interfaces="$*"
+    mkdir -p "${work_dir}"/etc/network/interfaces.d
     for netdev in $interfaces; do
         cat <<EOF >"${work_dir}"/etc/network/interfaces.d/"$netdev"
 auto $netdev
@@ -447,10 +449,12 @@ function basic_network() {
     if [ "$disable_ipv6" = "yes" ]; then
         log "Disable IPv6" white
 
+        mkdir -p "${work_dir}"/etc/modprobe.d
         echo "# Don't load ipv6 by default" >"${work_dir}"/etc/modprobe.d/ipv6.conf
         echo "alias net-pf-10 off" >>"${work_dir}"/etc/modprobe.d/ipv6.conf
     fi
 
+    mkdir -p "${work_dir}"/etc/network
     cat <<EOF >"${work_dir}"/etc/network/interfaces
 source-directory /etc/network/interfaces.d
 
