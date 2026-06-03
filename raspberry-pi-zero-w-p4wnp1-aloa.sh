@@ -82,7 +82,14 @@ install -m755 /bsp/scripts/monstop /usr/bin/
 # iodine: allow DNS tunneling
 status_stage3 'Install needed packages for P4wnp1 A.L.O.A'
 # Include serial tools (minicom, socat, python3-serial) so UART send/receive works programmatically and interactively
-eatmydata apt-get install -y apache2 atftpd autossh avahi-daemon bash-completion bluez bluez-firmware build-essential dhcpcd5 dnsmasq dosfstools fake-hwclock firmware-atheros genisoimage golang haveged hostapd i2c-tools iodine kali-tools-wireless openssh-server openvpn pi-bluetooth polkitd pkexec python3-configobj python3-dev python3-pip python3-requests python3-smbus python3-serial minicom socat wpasupplicant
+# NOTE: The full "kali-tools-wireless" metapackage is intentionally NOT used here:
+#   * it pulls in hostapd-wpe, whose postinst generates a TLS cert with OpenSSL that
+#     fails under qemu-user emulation (errno 38/ENOSYS), breaking the cross-build, and
+#   * it drags in LLVM/Mesa/Vulkan/GTK/gnuradio/SDR/VNC (hundreds of MB) that do not
+#     belong on a headless 512 MB RPi Zero W.
+# The wireless tools P4wnP1 actually needs are installed directly below
+# (hostapd for AP mode, wpasupplicant for client mode, aircrack-ng for auditing).
+eatmydata apt-get install -y apache2 atftpd autossh avahi-daemon bash-completion bluez bluez-firmware build-essential dhcpcd5 dnsmasq dosfstools fake-hwclock firmware-atheros genisoimage golang haveged hostapd i2c-tools iodine aircrack-ng openssh-server openvpn pi-bluetooth polkitd pkexec python3-configobj python3-dev python3-pip python3-requests python3-smbus python3-serial minicom socat wpasupplicant
 
 status_stage3 'Remove NetworkManager'
 eatmydata apt-get purge -y network-manager
