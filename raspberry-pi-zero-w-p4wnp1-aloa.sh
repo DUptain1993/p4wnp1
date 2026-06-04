@@ -286,6 +286,13 @@ unset CROSS_COMPILE
 # Disable statistics
 touch DISABLE_STATISTICS
 source setup_env.sh
+
+# The bundled b43 assembler links against the legacy AT&T lex library (-ll),
+# which no longer ships on modern Debian/Ubuntu/Kali (only flex's -lfl exists).
+# Switch it to -lfl so buildtools links instead of failing with
+# "/usr/bin/ld: cannot find -ll".
+sed -i -e 's/^LDFLAGS += -ll$/LDFLAGS += -lfl/' buildtools/b43/assembler/Makefile
+
 make
 cd buildtools/isl-0.10
 CC=$CCgcc
