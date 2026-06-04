@@ -127,7 +127,7 @@ dependencies="arch-test autoconf automake bc bison build-essential cgpt cgroup-t
 debootstrap device-tree-compiler dosfstools e2fsprogs eatmydata flex gawk git gnupg kpartx           \
 libfl-dev libncurses-dev lsb-release libssl-dev lsof lzma lzop m4 make mmdebstrap parted pixz pkg-config \
 python3-dev qemu-user-static binfmt-support rsync swig systemd-container u-boot-tools vboot-kernel-utils vboot-utils \
-libgnutls28-dev uuid-dev"
+libgnutls28-dev uuid-dev qpdf"
 deps="${dependencies} ${compilers}"
 
 # Update list deb packages
