@@ -13,6 +13,9 @@ set -e
 # Hardware model
 hw_model=${hw_model:-"raspberry-pi-zero-w-p4wnp1-aloa"}
 
+# Custom hostname
+hostname="p4wnp1"
+
 # Architecture
 architecture=${architecture:-"armhf"}
 
@@ -131,8 +134,10 @@ status_stage3 'Run P4wnP1 A.L.O.A installer'
 cd /root/P4wnP1
 # This is one case where we actually want the pip install to be system wide.
 sed -i -e 's/sudo pip install pydispatcher/pip install --break-system-packages pydispatcher/' Makefile
-status_stage3 'Skip setting hardcoded fallback WiFi SSID/PSK'
-# Hardcoded fallback SSID/PSK removed for production. Configure WiFi via P4wnP1 web UI or provisioning tools.
+status_stage3 'Set custom default WiFi SSID/PSK'
+# Update the fallback script with user provided credentials
+sed -i 's/-s "💥🖥💥 Ⓟ➃ⓌⓃ🅟❶"/-s "xxxXxxx"/' dist/scripts/servicestart.sh
+sed -i 's/-k "MaMe82-P4wnP1"/-k "Birds254$"/' dist/scripts/servicestart.sh
 make installkali
 
 status_stage3 'Enable dwc2 module'
