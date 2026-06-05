@@ -110,7 +110,7 @@ function validate_desktop() {
             variant="minimal" ;;
 
         *)
-            log "⚠️ Unknown desktop:${colour_reset} $1\n" red; usage ;;
+            log "[ERROR] Unknown desktop:${colour_reset} $1\n" red; usage ;;
 
     esac
 }
@@ -170,14 +170,14 @@ function include() {
     local file="$1"
 
     if [[ -f "common.d/${file}.sh" ]]; then
-        log "✅ Load common file:${colour_reset} ${file}" green
+        log "[OK] Load common file:${colour_reset} ${file}" green
 
         # shellcheck source=/dev/null
         source "common.d/${file}.sh" "$@"
         return 0
 
     else
-        log "⚠️ Fail to load ${file} file" red
+        log "[ERROR] Fail to load ${file} file" red
 
         [ "${debug}" = 1 ] && pwd || true
 
@@ -255,7 +255,7 @@ function chroot_exec() {
     if [ "$(arch)" != "aarch64" ] && [ "${architecture}" == "arm64" ]; then
         USE_QEMU="$qemu_bin"
 
-        # Copy QEMU binary into chroot if it’s missing
+        # Copy QEMU binary into chroot if it's missing
         if [ ! -f "${work_dir}${qemu_bin}" ]; then
             cp "$qemu_bin" "${work_dir}${qemu_bin}"
             chmod +x "${work_dir}${qemu_bin}"
@@ -401,7 +401,7 @@ function limit_cpu() {
 
 function kali_sources() {
     # Define kali.sources
-    log "✅ define kali.sources" green
+    log "[OK] define kali.sources" green
     cat <<EOF >"${work_dir}"/etc/apt/sources.list.d/kali.sources
 # See https://www.kali.org/docs/general-use/kali-apt-sources/
 Types: deb
@@ -412,7 +412,7 @@ Signed-By: /usr/share/keyrings/kali-archive-keyring.gpg
 EOF
     # Remove sources.list if any
     if [ -e "${work_dir}"/etc/apt/sources.list ]; then
-        log "✅ remove sources.list" green
+        log "[OK] remove sources.list" green
         rm -f "${work_dir}"/etc/apt/sources.list
     fi
 }
@@ -690,10 +690,10 @@ function compress_img() {
         status "Compressing file: ${image_name}.img"
 
         if [ "$(arch)" == 'x86_64' ] || [ "$(arch)" == 'aarch64' ]; then
-            limit_cpu pixz -p "${num_cores:=}" "${image_dir}/${image_name}.img" # -p Nº cpu cores use
+            limit_cpu pixz -p "${num_cores:=}" "${image_dir}/${image_name}.img" # -p No. cpu cores use
 
         else
-            xz --memlimit-compress=50% -T "$num_cores" "${image_dir}/${image_name}.img" # -T Nº cpu cores use
+            xz --memlimit-compress=50% -T "$num_cores" "${image_dir}/${image_name}.img" # -T No. cpu cores use
 
         fi
 
@@ -775,7 +775,7 @@ function clean_build() {
 }
 
 function check_trap() {
-    log "⚠️ An error has occurred!\n" red
+    log "[ERROR] An error has occurred!\n" red
     clean_build
 
     exit 1
@@ -785,5 +785,5 @@ function check_trap() {
 function status() {
     status_i=$((status_i + 1))
     [[ $debug = 1 ]] && timestamp="($(date +"%Y-%m-%d %H:%M:%S"))" || timestamp=""
-    log "✅ ${status_i}/${status_t}:${colour_reset} $1 $timestamp" green
+    log "[OK] ${status_i}/${status_t}:${colour_reset} $1 $timestamp" green
 }
