@@ -31,6 +31,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      - name: Free disk space
+        # The build script requires >=30 GiB free, but a stock ubuntu-22.04
+        # runner only has ~14 GiB free after mmdebstrap creates the rootfs
+        # (the rest is consumed by preinstalled toolchains this build never
+        # uses: .NET, Android SDK, GHC/Haskell, CodeQL bundles, Docker images).
+        # Strip those out first so the script's disk check actually passes.
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache "${AGENT_TOOLSDIRECTORY:-}" || true
+          sudo docker image prune --all --force || true
+          sudo apt-get clean
+          df -h /
+
       - name: Prepare swap for kernel build stability
         run: |
           sudo swapoff -a || true
