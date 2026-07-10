@@ -8,7 +8,10 @@ mon_interface="${interface}mon"
 ifconfig ${mon_interface} down
 sleep 1
 iw dev ${mon_interface} del
+del_status=$?
 
 if [ "${interface}" = "wlan0" ] && command -v nexutil >/dev/null 2>&1; then
     nexutil -m0 || true
 fi
+
+exit ${del_status}
