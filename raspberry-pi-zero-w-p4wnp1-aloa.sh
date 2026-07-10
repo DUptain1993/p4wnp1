@@ -102,6 +102,12 @@ status_stage3 'Build and install nexutil (nexmon monitor mode control tool)'
 # emulation rather than cross-compiled on the host alongside the kernel/firmware.
 git clone --depth 1 -b p4wnp1 https://github.com/mame82/nexmon_wifi_covert_channel.git /tmp/nexmon-nexutil
 cd /tmp/nexmon-nexutil/utilities/nexutil
+# nexmon's C sources predate C23 and still "typedef unsigned char bool;" (e.g.
+# patches/include/types.h, utilities/nexutil/typedefs.h). GCC 15's default
+# standard is now gnu23, where bool is a reserved keyword, so that typedef
+# fails to compile. Force gnu17 so the legacy typedef is still legal.
+sed -i -e 's/^\tgcc -c libnexio\.c/\tgcc -std=gnu17 -c libnexio.c/' ../libnexio/Makefile
+sed -i -e 's/^\tgcc -static -o nexutil/\tgcc -std=gnu17 -static -o nexutil/' Makefile
 make
 make install
 cd /
