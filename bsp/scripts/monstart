@@ -1,7 +1,25 @@
 #!/bin/bash
-interface=wlan0mon
-echo -n "Create monitor mode interface ${interface}... "
-iw phy phy0 interface add ${interface} type monitor 2>/dev/null 1>/dev/null
+# Enable WiFi monitor mode.
+# Usage: monstart [source-interface] [channel]
+#   source-interface defaults to wlan0 (onboard bcm43430a1 or a USB adapter)
+#   channel is optional (e.g. 6, or 36 for 5GHz-capable adapters)
+interface=${1:-wlan0}
+channel=${2:-}
+mon_interface="${interface}mon"
+
+if ! iw dev "${interface}" info >/dev/null 2>&1; then
+    echo "Interface ${interface} not found" >&2
+    exit 1
+fi
+
+phy="$(iw dev "${interface}" info 2>/dev/null | awk '/wiphy /{print "phy"$2}')"
+if [ -z "${phy}" ]; then
+    echo "Could not resolve wiphy for ${interface}" >&2
+    exit 1
+fi
+
+echo -n "Create monitor mode interface ${mon_interface}... "
+iw phy "${phy}" interface add "${mon_interface}" type monitor 2>/dev/null 1>/dev/null
 
 if [ $? -eq 0 ]; then
     echo "success"
@@ -11,16 +29,35 @@ else
 
 fi
 
-echo -n "Trying to enable ${interface}... "
-ifconfig ${interface} up 2>/dev/null
+echo -n "Trying to enable ${mon_interface}... "
+ifconfig ${mon_interface} up 2>/dev/null
 
 if [ $? -eq 0 ]; then
-    echo "success, ${interface} is up"
-
-    exit 0
+    echo "success, ${mon_interface} is up"
 
 else
     echo "failed"
 
     exit 1
 fi
+
+# Onboard Broadcom chip (bcm43430a1): also flip the nexmon-patched firmware's
+# own monitor mode ioctl, in addition to the virtual monitor vif above. This
+# is required by some nexmon firmware/driver combos to emit full radiotap
+# frames and enable injection on wlan0 itself. Harmless no-op otherwise.
+if command -v nexutil >/dev/null 2>&1 \
+    && [ -e "/sys/class/net/${interface}/device/subsystem" ] \
+    && [ "$(basename "$(readlink -f "/sys/class/net/${interface}/device/subsystem")")" = "sdio" ]; then
+    nexutil -m2 || echo "nexutil: failed to set monitor mode (non-onboard chip or firmware mismatch?)" >&2
+fi
+
+if [ -n "${channel}" ]; then
+    echo -n "Setting ${mon_interface} to channel ${channel}... "
+    if iw dev "${mon_interface}" set channel "${channel}" 2>/dev/null; then
+        echo "success"
+    else
+        echo "failed"
+    fi
+fi
+
+exit 0

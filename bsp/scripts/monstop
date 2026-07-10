@@ -1,5 +1,17 @@
 #!/bin/bash
-interface=wlan0mon
-ifconfig ${interface} down
+# Disable WiFi monitor mode.
+# Usage: monstop [source-interface]
+#   source-interface defaults to wlan0, matching monstart's default
+interface=${1:-wlan0}
+mon_interface="${interface}mon"
+
+ifconfig ${mon_interface} down
 sleep 1
-iw dev ${interface} del
+iw dev ${mon_interface} del
+del_status=$?
+
+if [ "${interface}" = "wlan0" ] && command -v nexutil >/dev/null 2>&1; then
+    nexutil -m0 || true
+fi
+
+exit ${del_status}
