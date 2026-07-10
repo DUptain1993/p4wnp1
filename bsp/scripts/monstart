@@ -19,9 +19,7 @@ if [ -z "${phy}" ]; then
 fi
 
 echo -n "Create monitor mode interface ${mon_interface}... "
-iw phy "${phy}" interface add "${mon_interface}" type monitor 2>/dev/null 1>/dev/null
-
-if [ $? -eq 0 ]; then
+if iw phy "${phy}" interface add "${mon_interface}" type monitor 2>/dev/null 1>/dev/null; then
     echo "success"
 
 else
@@ -30,9 +28,7 @@ else
 fi
 
 echo -n "Trying to enable ${mon_interface}... "
-ifconfig ${mon_interface} up 2>/dev/null
-
-if [ $? -eq 0 ]; then
+if ifconfig "${mon_interface}" up 2>/dev/null; then
     echo "success, ${mon_interface} is up"
 
 else

@@ -5,9 +5,9 @@
 interface=${1:-wlan0}
 mon_interface="${interface}mon"
 
-ifconfig ${mon_interface} down
+ifconfig "${mon_interface}" down
 sleep 1
-iw dev ${mon_interface} del
+iw dev "${mon_interface}" del
 
 if [ "${interface}" = "wlan0" ] && command -v nexutil >/dev/null 2>&1; then
     nexutil -m0 || true
