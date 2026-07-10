@@ -94,6 +94,19 @@ status_stage3 'Install needed packages for P4wnp1 A.L.O.A'
 # (hostapd for AP mode, wpasupplicant for client mode, aircrack-ng for auditing).
 eatmydata apt-get install -y apache2 atftpd autossh avahi-daemon bash-completion bluez bluez-firmware build-essential dhcpcd5 dnsmasq dosfstools fake-hwclock firmware-atheros genisoimage golang haveged hostapd i2c-tools iodine aircrack-ng openssh-server openvpn pi-bluetooth polkitd pkexec python3-configobj python3-dev python3-pip python3-requests python3-smbus python3-serial minicom socat wpasupplicant
 
+status_stage3 'Build and install nexutil (nexmon monitor mode control tool)'
+# nexutil gives ioctl-level control (e.g. "nexutil -m2") over the nexmon-patched
+# firmware's monitor mode on the onboard bcm43430a1 (wlan0), used by monstart/monstop.
+# utilities/nexutil's own Makefile only supports a native or Android NDK build (no
+# CROSS_COMPILE support), so it is built here natively under qemu-user armhf
+# emulation rather than cross-compiled on the host alongside the kernel/firmware.
+git clone --depth 1 -b p4wnp1 https://github.com/mame82/nexmon_wifi_covert_channel.git /tmp/nexmon-nexutil
+cd /tmp/nexmon-nexutil/utilities/nexutil
+make
+make install
+cd /
+rm -rf /tmp/nexmon-nexutil
+
 status_stage3 'Remove NetworkManager'
 eatmydata apt-get purge -y network-manager
 
@@ -311,7 +324,11 @@ make clean
 LD_LIBRARY_PATH="${NEXMON_ROOT}/buildtools/isl-0.10/.libs" make ARCH=arm CC="${NEXMON_ROOT}/buildtools/gcc-arm-none-eabi-5_4-2016q2-linux-x86/bin/arm-none-eabi-"
 
 # RPi0w->3B firmware
-# disable nexmon by default
+# nexmon firmware is enabled by default (installed as the active brcmfmac43430-sdio.bin),
+# giving full monitor mode + injection on the onboard chip out of the box.
+# brcmfmac43430-sdio.nexmon.bin is kept alongside as an explicitly-named copy, and
+# brcmfmac43430-sdio.rpi.bin below is the stock firmware backup for anyone who wants to
+# revert (cp brcmfmac43430-sdio.rpi.bin brcmfmac43430-sdio.bin) and lose monitor mode support.
 mkdir -p "${work_dir}"/lib/firmware/brcm
 cp "${NEXMON_ROOT}/patches/bcm43430a1/7_45_41_46/nexmon/brcmfmac43430-sdio.bin" "${work_dir}"/lib/firmware/brcm/brcmfmac43430-sdio.nexmon.bin
 cp "${NEXMON_ROOT}/patches/bcm43430a1/7_45_41_46/nexmon/brcmfmac43430-sdio.bin" "${work_dir}"/lib/firmware/brcm/brcmfmac43430-sdio.bin
