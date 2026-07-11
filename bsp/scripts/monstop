@@ -10,7 +10,10 @@ sleep 1
 iw dev "${mon_interface}" del
 del_status=$?
 
-if [ "${interface}" = "wlan0" ] && command -v nexutil >/dev/null 2>&1; then
+# See monstart for why this checks the sysfs bus instead of the interface name.
+if command -v nexutil >/dev/null 2>&1 \
+    && [ -e "/sys/class/net/${interface}/device/subsystem" ] \
+    && [ "$(basename "$(readlink -f "/sys/class/net/${interface}/device/subsystem")")" = "sdio" ]; then
     nexutil -m0 || true
 fi
 

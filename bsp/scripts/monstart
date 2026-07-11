@@ -41,7 +41,12 @@ fi
 # own monitor mode ioctl, in addition to the virtual monitor vif above. This
 # is required by some nexmon firmware/driver combos to emit full radiotap
 # frames and enable injection on wlan0 itself. Harmless no-op otherwise.
-if [ "${interface}" = "wlan0" ] && command -v nexutil >/dev/null 2>&1; then
+# Detect the onboard chip by its sysfs bus (sdio) rather than assuming any
+# interface literally named "wlan0" is it - a USB adapter can just as easily
+# enumerate as wlan0 if it's the only/first interface present.
+if command -v nexutil >/dev/null 2>&1 \
+    && [ -e "/sys/class/net/${interface}/device/subsystem" ] \
+    && [ "$(basename "$(readlink -f "/sys/class/net/${interface}/device/subsystem")")" = "sdio" ]; then
     nexutil -m2 || echo "nexutil: failed to set monitor mode (non-onboard chip or firmware mismatch?)" >&2
 fi
 
